@@ -1,0 +1,49 @@
+import hashlib
+import time
+from datetime import datetime
+
+class Block:
+    def __init__(self, index, timestamp, data, previous_hash):
+        self.index = index
+        self.timestamp = timestamp
+        self.data = data
+        self.previous_hash = previous_hash
+        self.hash = self.calculate_hash()
+
+    @property
+    def timestamp_readable(self):
+        # Mengambil waktu lokal sistem secara otomatis
+        dt = datetime.fromtimestamp(self.timestamp).astimezone()
+        return dt.strftime('%Y-%m-%d %H:%M:%S %Z')
+
+    def calculate_hash(self):
+        block_string = f"{self.index}{self.timestamp}{self.data}{self.previous_hash}"
+        return hashlib.sha256(block_string.encode()).hexdigest()
+
+class Blockchain:
+    def __init__(self):
+        self.chain = []
+        self.create_genesis_block()
+
+    def create_genesis_block(self):
+        # Mengirim 4 parameter lengkap: index, timestamp, data, previous_hash
+        genesis_block = Block(0, time.time(), "Genesis Block", "0")
+        self.chain.append(genesis_block)
+
+    def add_block(self, data):
+        last_block = self.chain[-1]
+        new_block = Block(len(self.chain), time.time(), data, last_block.hash)
+        self.chain.append(new_block)
+
+    def is_chain_valid(self):
+        for i in range(1, len(self.chain)):
+            current_block = self.chain[i]
+            previous_block = self.chain[i - 1]
+
+            if current_block.hash != current_block.calculate_hash():
+                return False
+
+            if current_block.previous_hash != previous_block.hash:
+                return False
+
+        return True
